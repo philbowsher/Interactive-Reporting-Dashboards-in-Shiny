@@ -1,0 +1,249 @@
+---
+title: "Interactive Reporting Dashboards in Shiny"
+output:
+  html_notebook: default
+  html_document: default
+---
+
+Laying the groundwork for interactive reporting & dashboards...
+
+1. ggplot2 and gridExtra
+
+```{r}
+library(ggplot2)
+library(gridExtra)
+
+data(anscombe)
+
+sapply(1:4, function(x) cor(anscombe[, x], anscombe[, x+4]))
+sapply(5:8, function(x) var(anscombe[, x]))
+lm(y1 ~ x1, data = anscombe)
+
+p1 <- ggplot(anscombe) + geom_point(aes(x1, y1), color = "darkorange", size = 3) + theme_bw() + scale_x_continuous(breaks = seq(0, 20, 2)) + scale_y_continuous(breaks = seq(0, 12, 2)) + geom_abline(intercept = 3, slope = 0.5, color = "cornflowerblue") + expand_limits(x = 0, y = 0) + labs(title = "dataset 1")
+p2 <- ggplot(anscombe) + geom_point(aes(x2, y2), color = "darkorange", size = 3) + theme_bw() + scale_x_continuous(breaks = seq(0, 20, 2)) + scale_y_continuous(breaks = seq(0, 12, 2)) + geom_abline(intercept = 3, slope = 0.5, color = "cornflowerblue") + expand_limits(x = 0, y = 0) + labs(title = "dataset 2")
+p3 <- ggplot(anscombe) + geom_point(aes(x3, y3), color = "darkorange", size = 3) + theme_bw() + scale_x_continuous(breaks = seq(0, 20, 2)) + scale_y_continuous(breaks = seq(0, 12, 2)) + geom_abline(intercept = 3, slope = 0.5, color = "cornflowerblue") + expand_limits(x = 0, y = 0) + labs(title = "dataset 3")
+p4 <- ggplot(anscombe) + geom_point(aes(x4, y4), color = "darkorange", size = 3) + theme_bw() + scale_x_continuous(breaks = seq(0, 20, 2)) + scale_y_continuous(breaks = seq(0, 12, 2)) + geom_abline(intercept = 3, slope = 0.5, color = "cornflowerblue") + expand_limits(x = 0, y = 0) + labs(title = "dataset 4")
+
+grid.arrange(p1, p2, p3, p4, top = "Anscombe's Quartet")
+```
+
+2. HTML Widgets
+
+http://www.htmlwidgets.org
+
+2.A Dygraphs
+
+http://www.htmlwidgets.org/showcase_dygraphs.html
+
+Basic plot example:
+
+```{r}
+## standard graphics device
+library(stats)
+plot(nhtemp, main = "nhtemp data", ylab = "Mean annual temp. in F)")
+
+```
+
+
+```{r}
+## using dygraphs
+library(dygraphs)
+fig <- dygraph(nhtemp, main = "New Haven Temperatures")
+fig <- dyAxis(fig, "y", label = "Temp (F)", valueRange = c(40, 60))
+fig <- dyOptions(fig, axisLineWidth = 1.5, fillGraph = TRUE, drawGrid = FALSE)
+fig
+```
+
+```{r}
+dygraph(nhtemp, main = "New Haven Temperatures") %>% 
+  dySeries("V1", label = "Temperature (F)") %>%
+  dyLegend(show = "always", hideOnMouseOut = FALSE)
+
+```
+
+```{r}
+dygraph(nhtemp, main = "New Haven Temperatures") %>% 
+  dyRangeSelector()
+```
+
+```{r}
+dygraph(nhtemp, main = "New Haven Temperatures") %>% 
+  dyRangeSelector(dateWindow = c("1920-01-01", "1960-01-01"))
+```
+
+```{r}
+dygraph(nhtemp, main = "New Haven Temperatures") %>% 
+  dyRangeSelector(height = 20, strokeColor = "")
+```
+
+```{r}
+#Shaded Regions
+dygraph(nhtemp, main = "New Haven Temperatures") %>% 
+  dyShading(from = "1920-1-1", to = "1930-1-1") %>%
+  dyShading(from = "1940-1-1", to = "1950-1-1")
+```
+
+```{r}
+dygraph(nhtemp, main = "New Haven Temperatures") %>% 
+  dySeries(label = "Temp (F)", color = "black") %>%
+  dyShading(from = "1920-1-1", to = "1930-1-1", color = "#FFE6E6") %>%
+  dyShading(from = "1940-1-1", to = "1950-1-1", color = "#CCEBD6")
+```
+
+```{r}
+library(quantmod)
+library(dygraphs)
+
+library(quantmod)
+
+getSymbols("MSFT", src = "google", from = "2014-06-01", auto.assign=TRUE)
+
+ret = ROC(MSFT[, 4])
+mn = mean(ret, na.rm = TRUE)
+std = sd(ret, na.rm = TRUE)
+dygraph(ret, main = "Microsoft Share Price") %>% 
+  dySeries("MSFT.Close", label = "MSFT") %>%
+  dyShading(from = mn - std, to = mn + std, axis = "y")
+
+
+```
+```{r}
+getSymbols("MSFT", src = "google", from = "2014-06-01", auto.assign=TRUE)
+dygraph(MSFT[, 4], main = "Microsoft Share Price") %>% 
+  dySeries("MSFT.Close", label = "MSFT") %>%
+  dyLimit(as.numeric(MSFT[1, 4]), color = "red")
+```
+
+```{r}
+getSymbols(c("MSFT", "HPQ"), src = "google", from = "2014-06-01", auto.assign=TRUE)
+
+stocks <- cbind(MSFT[,2:4], HPQ[,2:4])
+dygraph(stocks, main = "Microsoft and HP Share Prices") %>% 
+  dySeries(c("MSFT.Low", "MSFT.Close", "MSFT.High"), label = "MSFT") %>%
+  dySeries(c("HPQ.Low", "HPQ.Close", "HPQ.High"), label = "HPQ")
+```
+
+
+2.B Plotly
+
+http://www.htmlwidgets.org/showcase_plotly.html
+
+https://plot.ly/r/dashboard/
+
+https://plot.ly/r/shiny-tutorial/
+
+```{r}
+library(ggplot2)
+library(plotly)
+p <- ggplot(data = diamonds, aes(x = cut, fill = clarity)) +
+            geom_bar(position = "dodge")
+ggplotly(p)
+```
+
+```{r}
+d <- diamonds[sample(nrow(diamonds), 500), ]
+plot_ly(d, x = d$carat, y = d$price, 
+        text = paste("Clarity: ", d$clarity),
+        mode = "markers", color = d$carat, size = d$carat)
+```
+
+2.C rbokeh
+
+http://www.htmlwidgets.org/showcase_rbokeh.html
+
+```{r}
+library(rbokeh)
+figure() %>%
+  ly_points(Sepal.Length, Sepal.Width, data = iris,
+    color = Species, glyph = Species,
+    hover = list(Sepal.Length, Sepal.Width))
+```
+
+```{r}
+figure(width = NULL, height = NULL, legend_location = "top_left") %>%
+  ly_quantile(Sepal.Length, group = Species, data = iris)
+```
+
+
+```{r}
+figure(width = NULL, height = NULL) %>%
+  ly_points(Sepal.Length, Sepal.Width, data = iris,
+    color = Petal.Width)
+```
+
+```{r}
+tools <- c("pan", "wheel_zoom", "box_zoom", "box_select", "reset")
+nms <- expand.grid(names(iris)[1:4], rev(names(iris)[1:4]), stringsAsFactors = FALSE)
+splom_list <- vector("list", 16)
+for(ii in seq_len(nrow(nms))) {
+  splom_list[[ii]] <- figure(width = 200, height = 200, tools = tools,
+    xlab = nms$Var1[ii], ylab = nms$Var2[ii]) %>%
+    ly_points(nms$Var1[ii], nms$Var2[ii], data = iris,
+      color = Species, size = 5, legend = FALSE)
+}
+grid_plot(splom_list, ncol = 4, same_axes = TRUE, link_data = TRUE)
+```
+
+2.4 DT
+
+http://www.htmlwidgets.org/showcase_datatables.html
+
+```{r}
+library(DT)
+datatable(iris, options = list(pageLength = 5))
+```
+
+
+3. Interactive Plots - Shiny
+
+http://shiny.rstudio.com/gallery/
+
+Exmaples:
+
+3_Shiny_Basic_Plots
+
+3_Shiny_ToothGrowth_Plots
+
+4. shinydashboard
+
+https://rstudio.github.io/shinydashboard/
+
+Examples:
+
+4_Shiny_stockVis_basic
+
+4_Shiny_stockapp_tabs
+
+4_Shiny_shinydashboard_basic
+
+4_Shiny_shinydashboard_box
+
+5. flexdashboard
+
+http://rmarkdown.rstudio.com/flexdashboard/examples.html
+
+Examples:
+
+5_RMD_Flex_ToothGrowth
+
+5_RMD_Flex_Shiny_ToothGrowth
+
+6. Crosstalk
+
+http://rstudio.github.io/crosstalk/index.html
+
+http://rstudio.github.io/crosstalk/shiny.html
+
+Examples:
+
+6_Crosstalk_Shiny
+
+7. HTML Templates
+
+https://shiny.rstudio.com/articles/templates.html
+
+https://github.com/nwstephens/nyr2016
+
+Examples:
+
+7_Shiny_htmlTemplates
