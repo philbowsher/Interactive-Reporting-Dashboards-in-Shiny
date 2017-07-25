@@ -1,0 +1,42 @@
+---
+title: "Car Data"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+# By Sean Lopp
+library(flexdashboard)
+library(ggplot2)
+library(dplyr)
+```
+
+Row {data-width=650}
+-----------------------------------------------------------------------
+
+### Scatterplot
+
+```{r}
+mpg_subset <- mtcars %>%
+    filter(
+      hp >= 50,
+      hp <= 300,
+      cyl %in% c(4,6,8)
+    )
+
+ggplot(mpg_subset, aes(x = wt, y = mpg, color = factor(cyl))) +
+    geom_point()
+```
+
+Row {data-width=350}
+-----------------------------------------------------------------------
+
+### Histogram
+
+```{r}
+ggplot(mpg_subset, aes(x = wt)) + geom_histogram(binwidth = 0.25)
+```
+
+

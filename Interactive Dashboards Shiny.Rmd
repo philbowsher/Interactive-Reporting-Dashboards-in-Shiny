@@ -224,6 +224,8 @@ http://rmarkdown.rstudio.com/flexdashboard/examples.html
 
 Examples:
 
+5_RMD_Flex_RMD_To_Shiny_Intro
+
 5_RMD_Flex_ToothGrowth
 
 5_RMD_Flex_Shiny_ToothGrowth
